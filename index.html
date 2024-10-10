@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRDL-AI Question Assistant</title>
+    <style>
+        body {
+            font-family: , sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .container {
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            max-width: 800px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        select, textarea, input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        .checkbox-group {
+
+          display: flex;
+          justify-content: space-between;
+          margin: 10px 0;
+
+}
+
+        .checkbox-group label {
+        display: flex;
+        align-items: center;
+
+}
+    </style>
+    <script>
+        const subjectsByClass = {
+            "1": ["English", "Hindi", "Mathematics", "Environmental Studies"],
+            "2": ["English", "Hindi", "Mathematics", "Environmental Studies"],
+            "3": ["English", "Hindi", "Mathematics", "Environmental Studies"],
+            "4": ["English", "Hindi", "Mathematics", "Environmental Studies"],
+            "5": ["English", "Hindi", "Mathematics", "Environmental Studies"],
+            "6": ["English", "Hindi", "Mathematics", "Science", "Social Science"],
+            "7": ["English", "Hindi", "Mathematics", "Science", "Social Science"],
+            "8": ["English", "Hindi", "Mathematics", "Science", "Social Science"],
+            "9": ["English", "Hindi", "Mathematics", "Science", "Social Science"],
+            "10": ["English", "Hindi", "Mathematics", "Science", "Social Science"],
+            "11": ["Physics", "Chemistry", "Biology", "Mathematics", "Computer Science", "Accountancy", "Business Studies", "Economics", "History", "Political Science", "Geography","Sociology" ,"Phychology","Art History", "Urdu","Home science","CCT","Graphic Design","Computer science","Physical Education","Applied mathematics","English","Hindi","Bio Technology"],
+            "12": ["Physics", "Chemistry", "Biology", "Mathematics", "Computer Science", "Accountancy", "Business Studies", "Economics", "History", "Political Science", "Geography","Sociology" ,"Phychology","Art History", "Urdu","Home science","CCT","Graphic Design","Computer science","Physical Education","Applied mathematics","English","Hindi","Bio Technology"],
+    };
+
+        function updateSubjects() {
+            const classSelected = document.getElementById("classSelect").value;
+            const subjectSelect = document.getElementById("subjectSelect");
+
+            // Clear existing subjects
+            subjectSelect.innerHTML = "";
+
+            // Populate subjects based on the selected class
+            subjectsByClass[classSelected].forEach(subject => {
+                const option = document.createElement("option");
+                option.value = subject;
+                option.textContent = subject;
+                subjectSelect.appendChild(option);
+            });
+        }
+
+        function generatePrompt() {
+            var classSelected = document.getElementById("classSelect").value;
+            var subjectSelected = document.getElementById("subjectSelect").value;
+            var languageSelected = document.getElementById("languageSelect").value;
+            var questionText = document.getElementById("questionText").value.trim();
+            var specialCommand = document.getElementById("specialCommand").value.trim();
+            var schoolMode = document.getElementById("schoolMode").checked;
+            var logicMode = document.getElementById("logicMode").checked;
+
+            if (!questionText) {
+                alert("Please upload the question text.");
+                return;
+            }
+
+            // Class-specific guidance
+            var classInstruction = "";
+            switch (classSelected) {
+                case "1":
+                    classInstruction = "Answer this question in very simple language as you would explain to a Class 1 student.";
+                    break;
+                case "2":
+                    classInstruction = "Answer this question in simple terms that a Class 2 student can understand.";
+                    break;
+                case "3":
+                    classInstruction = "Answer this question in an easy way that a Class 3 student would understand.";
+                    break;
+                case "4":
+                    classInstruction = "Provide a clear, easy-to-understand answer for a Class 4 student.";
+                    break;
+                case "5":
+                    classInstruction = "Explain this question in language suitable for a Class 5 student.";
+                    break;
+                case "6":
+                    classInstruction = "Provide an answer suitable for a Class 6 student with simple examples if needed.";
+                    break;
+                case "7":
+                    classInstruction = "Answer in a way that a Class 7 student can understand, with some detail.";
+                    break;
+                case "8":
+                    classInstruction = "Provide a detailed answer suitable for a Class 8 student, keeping it simple.";
+                    break;
+                case "9":
+                    classInstruction = "Give a more detailed explanation suitable for a Class 9 student.";
+                    break;
+                case "10":
+                    classInstruction = "Give a detailed but clear explanation suitable for a Class 10 student.";
+                    break;
+                case "11":
+                    classInstruction = "Provide a more advanced but clear explanation suitable for a Class 11 student.";
+                    break;
+                case "12":
+                    classInstruction = "Provide an advanced but understandable explanation suitable for a Class 12 student.";
+                    break;
+                default:
+                    classInstruction = "Give an appropriate answer based on the student's grade level.";
+            }
+
+            // Include mode instructions
+            var modeInstruction = "";
+            if (schoolMode) modeInstruction += "This is a school-level question. Answer accordingly for writing in notebook as homework.";
+            if (logicMode) modeInstruction += " This is a logical reasoning question. Provide detailed logic in your answer.";
+
+            // Generate the structured prompt
+            var prompt = `Solve the following question for Class ${classSelected} - ${subjectSelected} in ${languageSelected}: and give solution as a human tacher and use bulletpoints if needed \n\n` + questionText + `\n\n${classInstruction}\n\n${modeInstruction}`;
+
+            // Include special command if provided
+            if (specialCommand) {
+                prompt += `\nSpecial command: ${specialCommand}`;
+            }
+
+            // Copy the prompt to clipboard
+            navigator.clipboard.writeText(prompt).then(() => {
+                // Redirect to ChatGPT after copying
+                window.open('https://chat.openai.com/', '_blank');
+            }, () => {
+                alert("Failed to copy the prompt.");
+            });
+        }
+    </script>
+</head>
+<body>
+    <header>
+        BRDL-AI Question Assistant
+    </header>
+
+    <div class="container">
+        <label for="classSelect">Select Class:</label>
+        <select id="classSelect" onchange="updateSubjects()">
+            <!-- Classes from 1 to 12 -->
+            <option value="1">Class 1</option>
+            <option value="2">Class 2</option>
+            <option value="3">Class 3</option>
+            <option value="4">Class 4</option>
+            <option value="5">Class 5</option>
+            <option value="6">Class 6</option>
+            <option value="7">Class 7</option>
+            <option value="8">Class 8</option>
+            <option value="9">Class 9</option>
+            <option value="10">Class 10</option>
+            <option value="11">Class 11</option>
+            <option value="12">Class 12</option>
+        </select>
+
+        <label for="subjectSelect">Select Subject:</label>
+        <select id="subjectSelect">
+            <!-- Subjects will be dynamically populated based on the class -->
+        </select>
+
+        <label for="languageSelect">Select Language:</label>
+        <select id="languageSelect">
+            <option value="English">English</option>
+            <option value="Hindi">Hindi</option>
+            <option value="Urdu">Urdu</option>
+            <option value="Sanskrit">Sanskrit</option>
+        </select>
+
+        <div class="checkbox-group">
+            <label><input type="checkbox" id="schoolMode"> School Mode</label>
+            <label><input type="checkbox" id="logicMode"> Logic Mode</label>
+        </div>
+
+        <label for="specialCommand">Special Command (Optional):</label>
+        <input type="text" id="specialCommand" placeholder="e.g., Explain in detail">
+
+        <label for="questionText">Upload your question text:</label>
+        <textarea id="questionText" rows="6" placeholder="Paste your scanned question text here..."></textarea>
+
+        <button onclick="generatePrompt()">Generate Prompt</button>
+    </div>
+
+    <script>
+        // Initialize the subjects based on the first class selection
+        updateSubjects();
+    </script>
+</body>
+</html>
